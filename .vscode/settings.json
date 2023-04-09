@@ -20,5 +20,16 @@
     "cmake.configureEnvironment": {
         "PICO_SDK_PATY": "E:\\project\\PICO\\Code\\pico-sdk"
     },
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "cmake.configureOnOpen": true,
+    "python.linting.enabled": true,
+    "python.analysis.typeshedPaths": [
+        ".vscode\\Pico-W-Stub"
+    ],
+    "python.languageServer": "Pylance",
+    "python.analysis.extraPaths": [
+        ".vscode\\Pico-W-Stub\\stubs"
+    ],
+    "picowgo.syncFolder": "",
+    "picowgo.openOnStart": true
 }

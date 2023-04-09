@@ -101,7 +101,15 @@ class EPD_2in9_B:
         self.digital_write(self.cs_pin, 0)
         self.spi.write(bytearray(buf))
         self.digital_write(self.cs_pin, 1)
-        
+    
+    def set_orientation(self, orientationType):
+        if orientationType == 'HORIZONTAL':
+            self.height = EPD_WIDTH
+            self.width = EPD_HEIGHT
+        else:
+            self.height = EPD_HEIGHT
+            self.width = EPD_WIDTH
+    
     def ReadBusy(self):
         print('busy')
         self.send_command(0x71)
@@ -135,11 +143,38 @@ class EPD_2in9_B:
         return 0       
         
     def display(self):
+        
+        bufferBlack = [0xFF] * (int(self.width/8) * self.height)
+        bufferRed = [0xFF] * (int(self.width/8) * self.height)
+        
+        # print("imwidth = %d, imheight = %d",imwidth,imheight)
+        if(EPD_WIDTH == self.width and EPD_HEIGHT == self.height):
+            print("Vertical")
+            for y in range(self.height):
+                for x in range(self.width):
+                    # Set the bits for the column of pixels at the current position.
+                    if self.imageblack.pixel(x, y) == 0:
+                        bufferBlack[int((x + y * self.width) / 8)] &= ~(0x80 >> (x % 8))
+                    
+                    if self.imagered.pixel(x, y) == 0:
+                        bufferRed[int((x + y * self.width) / 8)] &= ~(0x80 >> (x % 8))
+        elif(EPD_WIDTH == self.height and EPD_HEIGHT == self.width):
+            print("Horizontal")
+            for y in range(self.width):
+                for x in range(self.height):
+                    newx = y
+                    newy = self.height - x - 1
+                    if self.imageblack.pixel(x, y) == 0:
+                        bufferBlack[int((newx + newy*self.width) / 8)] &= ~(0x80 >> (y % 8))
+                    
+                    if self.imagered.pixel(x, y) == 0:
+                        bufferRed[int((newx + newy*self.width) / 8)] &= ~(0x80 >> (y % 8))
+        
         self.send_command(0x10)
-        self.send_data1(self.buffer_black)
+        self.send_data1(bufferBlack)
                 
         self.send_command(0x13)
-        self.send_data1(self.buffer_red)   
+        self.send_data1(bufferRed)   
 
         self.TurnOnDisplay()
 
@@ -165,32 +200,40 @@ class EPD_2in9_B:
         
 if __name__=='__main__':
     epd = EPD_2in9_B()
-    epd.Clear(0xff, 0xff)
     
-    epd.imageblack.fill(0xff)
-    epd.imagered.fill(0xff)
-    epd.imageblack.text("Waveshare", 0, 10, 0x00)
-    epd.imagered.text("ePaper-2.9-B", 0, 25, 0x00)
-    epd.imageblack.text("RPi Pico", 0, 40, 0x00)
-    epd.imagered.text("Hello World", 0, 55, 0x00)
-    epd.display()
-    epd.delay_ms(2000)
-    
-    epd.imagered.vline(10, 90, 40, 0x00)
-    epd.imagered.vline(90, 90, 40, 0x00)
-    epd.imageblack.hline(10, 90, 80, 0x00)
-    epd.imageblack.hline(10, 130, 80, 0x00)
-    epd.imagered.line(10, 90, 90, 130, 0x00)
-    epd.imageblack.line(90, 90, 10, 130, 0x00)
-    epd.display()
-    epd.delay_ms(2000)
-    
-    epd.imageblack.rect(10, 150, 40, 40, 0x00)
-    epd.imagered.fill_rect(60, 150, 40, 40, 0x00)
-    epd.display()
-    epd.delay_ms(2000)
+    try:
+        epd.Clear(0xff, 0xff)
         
-    epd.Clear(0xff, 0xff)
-    epd.delay_ms(2000)
-    print("sleep")
-    epd.sleep()
+        epd.set_orientation('HORIZONTAL')
+        
+        epd.imageblack.fill(0xff)
+        epd.imagered.fill(0xff)
+        epd.imageblack.text("Waveshare", 0, 10, 0x00)
+        epd.imagered.text("ePaper-2.9-B", 0, 25, 0x00)
+        epd.imageblack.text("RPi Pico", 0, 40, 0x00)
+        epd.imagered.text("Hello World", 0, 55, 0x00)
+        epd.display()
+        epd.delay_ms(2000)
+        
+        epd.imagered.vline(10, 90, 40, 0x00)
+        epd.imagered.vline(90, 90, 40, 0x00)
+        epd.imageblack.hline(10, 90, 80, 0x00)
+        epd.imageblack.hline(10, 130, 80, 0x00)
+        epd.imagered.line(10, 90, 90, 130, 0x00)
+        epd.imageblack.line(90, 90, 10, 130, 0x00)
+        epd.display()
+        epd.delay_ms(2000)
+        
+        epd.imageblack.rect(10, 150, 40, 40, 0x00)
+        epd.imagered.fill_rect(60, 150, 40, 40, 0x00)
+        epd.display()
+        epd.delay_ms(2000)
+    
+    except:
+        pass
+    
+    finally:
+        epd.Clear(0xff, 0xff)
+        epd.delay_ms(2000)
+        print("sleep")
+        epd.sleep()
